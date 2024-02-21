@@ -1,0 +1,12 @@
+services:
+  currency:
+    container_name: currency
+    image: currency
+    platform: linux/arm64
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9002:9002"
+    volumes:
+      - ./config:/app/config
