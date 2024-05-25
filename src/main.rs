@@ -95,7 +95,7 @@ where
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load environment variables from .env file.
     // Fails if .env file not found, not readable or invalid.
-    dotenvy::from_path("./config/.env")?;
+    dotenvy::from_path("./envs/dev.env")?;
 
     let mut port = get_env_var::<u32>("PORT");
 
