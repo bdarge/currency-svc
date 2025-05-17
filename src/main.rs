@@ -5,6 +5,7 @@ use std::fmt::Debug;
 use std::str::FromStr;
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
+use tonic::async_trait;
 
 // // Use Jemalloc only for musl-64 bits platforms
 // #[cfg(all(target_env = "musl", target_pointer_width = "64"))]
@@ -26,6 +27,7 @@ pub struct Rate {
 #[derive(Debug, Clone)]
 pub struct CurrencyService {
     url: String,
+    token: String,
     base: String,
 }
 
@@ -33,12 +35,13 @@ impl Default for CurrencyService {
     fn default() -> CurrencyService {
         CurrencyService {
             url: "".to_owned(),
-            base: "USD".to_owned(),
+            token: "".to_owned(),
+            base: "".to_owned(),
         }
     }
 }
 
-#[tonic::async_trait]
+#[async_trait]
 impl Currency for CurrencyService {
     async fn convert(
         &self,
@@ -51,7 +54,8 @@ impl Currency for CurrencyService {
         if b == "" {
             b = self.base.clone();
         }
-        let r = get_current_data(&self.url, &b).await;
+
+        let r = get_current_data(&self.url, &self.token, &b).await;
 
         match r {
             Ok(rate) => {
@@ -70,8 +74,9 @@ impl Currency for CurrencyService {
     }
 }
 
-async fn get_current_data(url: &str, base: &str) -> Result<Rate, Box<dyn std::error::Error>> {
-    let url = format!("{}/{}", url, base);
+async fn get_current_data(url: &str, token: &str, base: &str) -> Result<Rate, Box<dyn std::error::Error>> {
+    println!("Get today's exchange rate for {}", base);
+    let url = format!("{}/{}/latest/{}", url, token, base);
     let text_response = reqwest::get(url).await?.text().await?;
     let rate: Rate = serde_json::from_str(&text_response)?;
     Ok(rate)
@@ -95,7 +100,7 @@ where
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load environment variables from .env file.
     // Fails if .env file not found, not readable or invalid.
-    dotenvy::from_path("./envs/dev.env")?;
+    dotenvy::from_path("./config/dev.env")?;
 
     let mut port = get_env_var::<u32>("PORT");
 
@@ -107,13 +112,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Currency server listening on: {}", addr);
 
+    let name = get_env_var::<String>("TOKEN_NAME");
+    let token = env::var(name).unwrap();
     let service: CurrencyService = CurrencyService {
-        url: get_env_var::<String>("URL"),
+        url: get_env_var::<String>("RATE_URL"),
+        token: token,
         ..Default::default()
     };
-
     let svc: CurrencyServer<CurrencyService> = CurrencyServer::new(service);
-
     Server::builder().add_service(svc).serve(addr).await?;
 
     Ok(())

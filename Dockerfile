@@ -11,7 +11,7 @@ RUN apk add --no-cache build-base musl-dev unzip curl \
 WORKDIR /app
 
 # copy source files
-COPY . /app/
+COPY . .
 
 RUN cargo build --release
 

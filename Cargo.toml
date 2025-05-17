@@ -6,16 +6,16 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tonic = "0.10"
-prost = "0.12"
-serde_json = "1.0"
-serde = { version = "1.0.196", features = ["derive"] }
-reqwest = { version = "0.11.24", default-features = false, features = ["json", "rustls-tls"] }
-tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "sync", "time"]}
+tonic = "0.12.3"
+prost = "0.13.5"
+serde_json = "1.0.140"
+serde = { version = "1.0.219", features = ["derive"] }
+reqwest = { version = "0.12.15", default-features = false, features = ["json", "rustls-tls"] }
+tokio = { version = "1.44.1", features = ["rt-multi-thread", "macros", "sync", "time"]}
 dotenvy = "0.15.7"
 
 [build-dependencies]
-tonic-build = "0.8"
+tonic-build = "0.12.3"
 
 # [target.'cfg(all(target_env = "musl", target_pointer_width = "64"))'.dependencies.jemallocator]
 # version = "0.3"
