@@ -21,7 +21,7 @@ jobs:
       packages: write
     env:
       NODE_ENV: PROD
-      IMAGE_NAME: sb-auth
+      IMAGE_NAME: sb-currency
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.2.2
