@@ -98,9 +98,15 @@ where
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut environment = get_env_var::<String>("ENV");
+
+    if environment == "" {
+        environment = String::from("dev");
+    }
+
     // Load environment variables from .env file.
     // Fails if .env file not found, not readable or invalid.
-    dotenvy::from_path("./config/dev.env")?;
+    dotenvy::from_path(format!("./config/{environment}.env"))?;
 
     let mut port = get_env_var::<u32>("PORT");
 
