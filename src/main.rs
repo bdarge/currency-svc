@@ -3,16 +3,9 @@ use std::collections::HashMap;
 use std::env::{self, VarError};
 use std::fmt::Debug;
 use std::str::FromStr;
-use std::time::Duration;
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
 use tonic::async_trait;
-use tonic_health::server::HealthReporter;
-
-// // Use Jemalloc only for musl-64 bits platforms
-// #[cfg(all(target_env = "musl", target_pointer_width = "64"))]
-// #[global_allocator]
-// static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 use currency::currency_server::{Currency, CurrencyServer};
 use currency::{CurrencyRequest, CurrencyResponse};
@@ -99,21 +92,6 @@ where
     var.parse().unwrap()
 }
 
-/// This function (somewhat improbably) flips the status of a service every second, in order
-/// that the effect of `tonic_health::HealthReporter::watch` can be easily observed.
-async fn twiddle_service_status(reporter: HealthReporter) {
-    let mut iter = 0u64;
-    loop {
-        iter += 1;
-        tokio::time::sleep(Duration::from_secs(1)).await;
-
-        if iter % 2 == 0 {
-            reporter.set_serving::<CurrencyServer<CurrencyService>>().await;
-        } else {
-            reporter.set_not_serving::<CurrencyServer<CurrencyService>>().await;
-        };
-    }
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -135,8 +113,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let addr = format!("0.0.0.0:{:?}", port).parse().unwrap();
 
-    println!("Currency server listening on: {}", addr);
-
     let name = get_env_var::<String>("TOKEN_NAME");
     let token = env::var(name).unwrap();
     let service: CurrencyService = CurrencyService {
@@ -150,7 +126,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .set_serving::<CurrencyServer<CurrencyService>>()
         .await;
 
-    tokio::spawn(twiddle_service_status(health_reporter.clone()));
+    println!("Currency, and health server listening on: {}", addr);
 
     Server::builder()
         .add_service(health_service)
